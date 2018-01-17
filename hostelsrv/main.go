@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"hostel-chat/hostelsrv/chat"
 	"log"
 	"net"
@@ -18,7 +19,7 @@ func main() {
 	}
 	log.Println("Use config:", c)
 
-	listener, err := net.Listen("tcp", ":"+c.Port)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Port))
 	if err != nil {
 		log.Fatalln("Can't start server:", err)
 	}

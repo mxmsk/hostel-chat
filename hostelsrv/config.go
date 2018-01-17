@@ -9,15 +9,15 @@ import (
 
 // Config defines configuration of chat server.
 type Config struct {
-	Port  string
+	Port  uint
 	Rooms []string
 }
 
 // Parse loads config from CLI and file where CLI args have priority.
 func (c *Config) Parse() error {
-	var cliPort string
+	var cliPort uint
 	var cliRooms string
-	flag.StringVar(&cliPort, "port", "", "Port to listen requests on")
+	flag.UintVar(&cliPort, "port", 0, "Port to listen requests on")
 	flag.StringVar(&cliRooms, "rooms", "", "List of rooms [room1|room2|..|roomN]")
 	flag.Parse()
 
@@ -29,7 +29,7 @@ func (c *Config) Parse() error {
 		return err
 	}
 
-	if cliPort != "" {
+	if cliPort != 0 {
 		c.Port = cliPort
 	}
 	if cliRooms != "" {

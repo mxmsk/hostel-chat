@@ -16,7 +16,8 @@ type Server interface {
 // Client allows to interact with chat server.
 type Client struct {
 	srv           Server
-	subscriptions map[string]string
+	subscriptions *bytes.Buffer
+	defaultRoom   string
 }
 
 // NewClient returns a new instance of Client for interaction
@@ -24,13 +25,14 @@ type Client struct {
 func NewClient(srv Server) *Client {
 	return &Client{
 		srv:           srv,
-		subscriptions: make(map[string]string),
+		subscriptions: bytes.NewBufferString("subscribe"),
 	}
 }
 
 // AddSubscription instructs Client to subscribe to the specified room.
 func (cl *Client) AddSubscription(room string, nick string) {
-	cl.subscriptions[room] = nick
+	cl.subscriptions.WriteString(fmt.Sprintf("|%s:%s", room, nick))
+	cl.defaultRoom = room
 }
 
 // Run starts chat loop, allowing to interact with the server
@@ -43,35 +45,22 @@ func (cl *Client) Run(in io.Reader, out io.Writer) {
 		}
 	}()
 
-	defaultRoom := cl.subscribe()
-	for {
-		s := bufio.NewScanner(in)
-		for s.Scan() {
-			ln := s.Text()
-			if len(ln) == 0 {
-				continue
-			}
-			room := defaultRoom
-			if ln[0] == '/' {
-				i := strings.Index(ln, " ")
-				if i > 0 {
-					room = ln[1:i]
-					ln = ln[i+1:]
-				}
-			}
-			fmt.Fprintf(cl.srv, "publish|%s|%s\n", room, ln)
+	fmt.Fprintln(cl.srv, cl.subscriptions.String())
+
+	s := bufio.NewScanner(in)
+	for s.Scan() {
+		ln := s.Text()
+		if len(ln) == 0 {
+			continue
 		}
+		room := cl.defaultRoom
+		if ln[0] == '/' {
+			i := strings.Index(ln, " ")
+			if i > 0 {
+				room = ln[1:i]
+				ln = ln[i+1:]
+			}
+		}
+		fmt.Fprintf(cl.srv, "publish|%s|%s\n", room, ln)
 	}
-}
-
-func (cl *Client) subscribe() string {
-	var defaultRoom string
-	subscribe := bytes.NewBufferString("subscribe")
-	for room, nick := range cl.subscriptions {
-		subscribe.WriteString(fmt.Sprintf("|%s:%s", room, nick))
-		defaultRoom = room
-	}
-
-	fmt.Fprintln(cl.srv, subscribe)
-	return defaultRoom
 }
