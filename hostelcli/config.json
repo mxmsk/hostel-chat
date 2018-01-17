@@ -3,5 +3,6 @@
         "A:nickA",
         "B:nickB",
         "C:nickC"
-    ]
+    ],
+    "server": "127.0.0.1:5000"
 }

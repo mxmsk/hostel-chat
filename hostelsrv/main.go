@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"hostel-chat/hostelsrv/chat"
 	"log"
 	"net"
@@ -13,16 +12,19 @@ var chatCommands = map[string]chat.Command{
 }
 
 func main() {
-	port := flag.String("port", "5000", "Port to listen requests on")
-	flag.Parse()
+	c := Config{}
+	if err := c.Parse(); err != nil {
+		log.Fatalln("Config error:", err)
+	}
+	log.Println("Use config:", c)
 
-	listener, err := net.Listen("tcp", ":"+*port)
+	listener, err := net.Listen("tcp", ":"+c.Port)
 	if err != nil {
 		log.Fatalln("Can't start server:", err)
 	}
-	log.Println("Listening on port", *port)
+	log.Println("Listening on port", c.Port)
 
-	chatSvc := initChatService()
+	chatSvc := initChatService(c)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -34,14 +36,14 @@ func main() {
 	}
 }
 
-func initChatService() *chat.Service {
+func initChatService(c Config) *chat.Service {
 	hub := chat.NewHub(128)
 	commands := map[string]chat.Command{
 		"subscribe": chat.NewSubscribeCommand(hub),
 		"publish":   chat.NewPublishCommand(hub, 254),
 	}
-	hub.CreateRoom("A")
-	hub.CreateRoom("B")
-	hub.CreateRoom("C")
+	for _, room := range c.Rooms {
+		hub.CreateRoom(room)
+	}
 	return chat.NewService(commands, hub)
 }

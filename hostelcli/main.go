@@ -1,33 +1,32 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"fmt"
 	"hostel-chat/hostelcli/chat"
-	"io/ioutil"
+	"log"
 	"net"
 	"os"
 )
 
 func main() {
-	svrAddr := flag.String("server", "127.0.0.1:5000", "Hostel server address [host[:port]]")
-	flag.Parse()
-
-	c := chat.Config{}
-	f, err := ioutil.ReadFile("config.json")
-	if err == nil {
-		json.Unmarshal(f, &c)
+	c := Config{}
+	if err := c.Parse(); err != nil {
+		log.Fatalln("Config error:", err)
 	}
+	log.Println("Use config:", c)
 
-	fmt.Println("Connecting to:", *svrAddr, "...")
-	conn, err := net.Dial("tcp", *svrAddr)
+	log.Println("Connecting to:", c.Server, "...")
+	conn, err := net.Dial("tcp", c.Server)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalln(err)
 	}
-	fmt.Println("Connected. You can now start chatting.")
 
-	cl := chat.NewClient(conn, c)
+	cl := chat.NewClient(conn)
+	for _, sub := range c.Subscriptions {
+		room, nick := roomNickPair(sub)
+		cl.AddSubscription(room, nick)
+	}
+
+	fmt.Println("Connected! You can now start chatting.")
 	cl.Run(os.Stdin, os.Stdout)
 }

@@ -20,7 +20,7 @@ type Unsubscriber interface {
 	Unsubscribe(user identity)
 }
 
-// Client defines requirements for a chat client.
+// Client defines requirements for chat client.
 type Client interface {
 	io.ReadWriteCloser
 }
