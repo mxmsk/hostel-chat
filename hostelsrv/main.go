@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"hostel/hostelsrv/chat"
+	"hostel-chat/hostelsrv/chat"
 	"log"
 	"net"
 )
@@ -20,6 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Can't start server:", err)
 	}
+	log.Println("Listening on port", *port)
 
 	chatSvc := initChatService()
 	for {
@@ -28,6 +29,7 @@ func main() {
 			log.Println("Accept error:", err)
 			continue
 		}
+		log.Println("New connection", conn.RemoteAddr())
 		go chatSvc.HandleClient(conn)
 	}
 }
@@ -38,7 +40,8 @@ func initChatService() *chat.Service {
 		"subscribe": chat.NewSubscribeCommand(hub),
 		"publish":   chat.NewPublishCommand(hub, 254),
 	}
-	hub.CreateRoom("room1")
-	hub.CreateRoom("room2")
+	hub.CreateRoom("A")
+	hub.CreateRoom("B")
+	hub.CreateRoom("C")
 	return chat.NewService(commands, hub)
 }
