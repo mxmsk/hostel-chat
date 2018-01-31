@@ -209,6 +209,6 @@ func TestPulishCommand_MessagePublished_RoomHistoryAppended(t *testing.T) {
 	cmd := NewPublishCommand(hub, 254)
 	cmd.Handle("id1", "room1|msg1", make(chan message))
 
-	assert.Equal(t, expectedItem, hub.rooms["room1"].history.Front().Value)
-	assert.Equal(t, 0, hub.rooms["room2"].history.Len())
+	assert.Equal(t, expectedItem, hub.rooms["room1"].history.Prev().Value)
+	assert.Nil(t, hub.rooms["room2"].history.Value)
 }

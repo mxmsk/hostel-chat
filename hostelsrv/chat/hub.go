@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"container/list"
+	"container/ring"
 	"fmt"
 	"strings"
 	"sync"
@@ -25,7 +25,7 @@ type room struct {
 	name        string
 	subscribers map[identity]subscriber
 	sm          sync.RWMutex
-	history     *list.List
+	history     *ring.Ring
 	hm          sync.Mutex
 }
 
@@ -50,7 +50,7 @@ func (hub *Hub) CreateRoom(roomName string) error {
 	hub.rooms[roomName] = &room{
 		name:        roomName,
 		subscribers: make(map[identity]subscriber),
-		history:     list.New(),
+		history:     ring.New(hub.roomHistoryCap),
 	}
 	return nil
 }
@@ -90,11 +90,8 @@ func (hub *Hub) AppendRoomHistory(roomName string, item historyItem) error {
 	if room, ok := hub.rooms[roomName]; ok {
 		room.hm.Lock()
 		defer room.hm.Unlock()
-		h := room.history
-		if h.Len() == hub.roomHistoryCap {
-			h.Remove(h.Front())
-		}
-		h.PushBack(item)
+		room.history.Value = item
+		room.history = room.history.Next()
 		return nil
 	}
 	return fmt.Errorf("Cannot save history for unknown room: %s", roomName)
@@ -106,11 +103,11 @@ func (hub *Hub) getRoomHistory(roomName string) []historyItem {
 		room.hm.Lock()
 		defer room.hm.Unlock()
 		history = make([]historyItem, 0, room.history.Len())
-		h := room.history.Front()
-		for h != nil {
-			history = append(history, h.Value.(historyItem))
-			h = h.Next()
-		}
+		room.history.Do(func(h interface{}) {
+			if h != nil {
+				history = append(history, h.(historyItem))
+			}
+		})
 	}
 	return history
 }

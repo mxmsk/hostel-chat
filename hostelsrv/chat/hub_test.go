@@ -130,9 +130,8 @@ func TestHubAppendRoomHistory_RoomExists_ExtendsHistory(t *testing.T) {
 	assert.NoError(t, err2)
 
 	room := hub.rooms["room1"]
-	assert.Equal(t, 2, room.history.Len())
-	assert.Equal(t, room.history.Front().Value, item1)
-	assert.Equal(t, room.history.Back().Value, item2)
+	assert.Equal(t, item2, room.history.Prev().Value)
+	assert.Equal(t, item1, room.history.Prev().Prev().Value)
 }
 
 func TestHubAppendRoomHistory_RoomDoesntExist_ErrorReturned(t *testing.T) {
@@ -144,33 +143,12 @@ func TestHubAppendRoomHistory_RoomDoesntExist_ErrorReturned(t *testing.T) {
 	assert.EqualError(t, err, "Cannot save history for unknown room: room2")
 }
 
-func TestHubAppendRoomHistory_HistoryExceedsCapacity_OldPoppedNewPushed(t *testing.T) {
-	hub := NewHub(2)
-	hub.CreateRoom("room1")
-	room := hub.rooms["room1"]
-	item1 := historyItem{nick: "nick1", msg: "msg1"}
-	item2 := historyItem{nick: "nick1", msg: "msg2"}
-	item3 := historyItem{nick: "nick1", msg: "msg3"}
-	item4 := historyItem{nick: "nick1", msg: "msg4"}
-
-	hub.AppendRoomHistory("room1", item1)
-	hub.AppendRoomHistory("room1", item2)
-
-	assert.Equal(t, 2, room.history.Len())
-	assert.Equal(t, room.history.Front().Value, item1)
-	assert.Equal(t, room.history.Back().Value, item2)
-
-	hub.AppendRoomHistory("room1", item3)
-
-	assert.Equal(t, 2, room.history.Len())
-	assert.Equal(t, room.history.Front().Value, item2)
-	assert.Equal(t, room.history.Back().Value, item3)
-
-	hub.AppendRoomHistory("room1", item4)
-
-	assert.Equal(t, 2, room.history.Len())
-	assert.Equal(t, room.history.Front().Value, item3)
-	assert.Equal(t, room.history.Back().Value, item4)
+func TestHubNewHub_GivenCapacity_ExpectCorrectHistoryRingLen(t *testing.T) {
+	for i := 2; i < 4; i++ {
+		hub := NewHub(i)
+		hub.CreateRoom("room1")
+		assert.Equal(t, i, hub.rooms["room1"].history.Len())
+	}
 }
 
 func TestHubgetRoomHistory_RoomExists_HistoryItemsReturned(t *testing.T) {
@@ -182,10 +160,10 @@ func TestHubgetRoomHistory_RoomExists_HistoryItemsReturned(t *testing.T) {
 	item3 := historyItem{nick: "nick1", msg: "msg3"}
 	item4 := historyItem{nick: "nick1", msg: "msg4"}
 
-	hub.rooms["room1"].history.PushFront(item1)
-	hub.rooms["room1"].history.PushFront(item2)
-	hub.rooms["room2"].history.PushFront(item3)
-	hub.rooms["room2"].history.PushFront(item4)
+	hub.rooms["room1"].history.Value = item1
+	hub.rooms["room1"].history.Next().Value = item2
+	hub.rooms["room2"].history.Value = item3
+	hub.rooms["room2"].history.Next().Value = item4
 
 	history1 := hub.getRoomHistory("room1")
 	history2 := hub.getRoomHistory("room2")
