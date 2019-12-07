@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"hostel-chat/hostelsrv/chat"
 	"log"
 	"net"
+
+	"./chat"
 )
 
 var chatCommands = map[string]chat.Command{

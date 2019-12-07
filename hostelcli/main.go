@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"hostel-chat/hostelcli/chat"
 	"log"
 	"net"
 	"os"
+
+	"./chat"
 )
 
 func main() {

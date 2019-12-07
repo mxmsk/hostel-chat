@@ -32,6 +32,7 @@ func NewClient(srv Server) *Client {
 // AddSubscription instructs Client to subscribe to the specified room.
 func (cl *Client) AddSubscription(room string, nick string) {
 	cl.subscriptions.WriteString(fmt.Sprintf("|%s:%s", room, nick))
+
 	cl.defaultRoom = room
 }
 
