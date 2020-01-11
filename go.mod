@@ -1,4 +1,4 @@
-module hostelsrv
+module github.com/mxmsk/hostel-chat
 
 go 1.13
 

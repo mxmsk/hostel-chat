@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	"./chat"
+	"github.com/mxmsk/hostel-chat/hostelsrv/chat"
 )
 
 var chatCommands = map[string]chat.Command{

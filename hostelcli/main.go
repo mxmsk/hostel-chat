@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 
-	"./chat"
+	"github.com/mxmsk/hostel-chat/hostelcli/chat"
 )
 
 func main() {
